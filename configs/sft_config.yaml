@@ -1,0 +1,49 @@
+# SFT Training Configuration for Llama3.2-1B-Instruct Function Calling
+
+model:
+  model_name: "Llama-3.2-1B-Instruct"
+  model_id: "meta-llama/Llama-2-1b-hf"  # ModelScope compatible
+  cache_dir: "./models/pretrained"
+
+training:
+  output_dir: "./models/checkpoints/sft"
+  num_train_epochs: 3
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 4  # Effective batch size = 2*4=8
+  learning_rate: 2.0e-4
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.1
+  max_grad_norm: 1.0
+  weight_decay: 0.01
+
+optimization:
+  optim: "paged_adamw_8bit"
+  max_seq_length: 512
+  bf16: false  # Use fp16 for compatibility
+  fp16: true
+  gradient_checkpointing: true
+
+lora:
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  lora_target_modules: ["q_proj", "v_proj"]
+  lora_bias: "none"
+  task_type: "CAUSAL_LM"
+
+logging:
+  logging_steps: 10
+  save_steps: 100
+  eval_steps: 100
+  save_total_limit: 3
+  log_level: "info"
+  report_to: ["tensorboard", "wandb"]
+
+data:
+  dataset_name: "glaiveai/glaive-function-calling-v2"
+  validation_split_percentage: 10
+  preprocessing_num_workers: 4
+
+seed: 42
+torch_compile: false
