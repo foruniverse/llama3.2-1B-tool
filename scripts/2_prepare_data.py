@@ -6,9 +6,11 @@ from pathlib import Path
 from typing import Dict, List
 
 # Add project root to path
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+print(project_root)
+# sys.exit()
 from scripts.utils.utils import setup_logging, ensure_dir, load_yaml_config
 
 logger = setup_logging("./logs/prepare_data.log")
