@@ -2,27 +2,27 @@
 
 model:
   model_name: "Llama-3.2-1B-Instruct"
-  model_id: "meta-llama/Llama-2-1b-hf"  # ModelScope compatible
+  model_id: "AI-ModelScope/Llama-3.2-1B-Instruct"  # ModelScope compatible
   cache_dir: "./models/pretrained"
 
 training:
   output_dir: "./models/checkpoints/sft"
   num_train_epochs: 3
   per_device_train_batch_size: 2
-  per_device_eval_batch_size: 4
-  gradient_accumulation_steps: 4  # Effective batch size = 2*4=8
-  learning_rate: 2.0e-4
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 24  # Effective batch size = 1*32=32
+  learning_rate: 1.0e-4
   lr_scheduler_type: "cosine"
   warmup_ratio: 0.1
   max_grad_norm: 1.0
   weight_decay: 0.01
-  max_seq_length: 512
+  max_seq_length: 2048
 
 optimization:
   optim: "paged_adamw_8bit"
-  max_seq_length: 512
-  bf16: false  # Use fp16 for compatibility
-  fp16: true
+  max_seq_length: 1024
+  bf16: True  # Use bf16 when the GPU supports it
+  fp16: false
   gradient_checkpointing: true
 
 lora:
@@ -34,17 +34,26 @@ lora:
   task_type: "CAUSAL_LM"
 
 logging:
-  logging_steps: 10
-  save_steps: 100
-  eval_steps: 100
-  save_total_limit: 3
+  logging_steps: 5
+  save_steps: 90
+  eval_steps: 45
+  save_total_limit: 10
   log_level: "info"
-  report_to: ["tensorboard", "wandb"]
+  # report_to: ["tensorboard", "wandb"]
+  report_to: "wandb"
 
 data:
-  dataset_name: "glaiveai/glaive-function-calling-v2"
+  # dataset_name: "glaiveai/glaive-function-calling-v2"
+  dataset_name: "Team-ACE/ToolACE"
   validation_split_percentage: 10
+  train_samples: 0
+  validation_samples: 500
   preprocessing_num_workers: 4
+  auto_max_seq_length: false
+  max_seq_length_percentile: 95
+  max_seq_length_cap: 4096
+  min_max_seq_length: 1024
+  length_round_multiple: 256
 
 seed: 42
 torch_compile: false

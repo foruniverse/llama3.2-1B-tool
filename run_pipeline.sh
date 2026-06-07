@@ -32,7 +32,7 @@ echo ""
 
 # Prepare data
 echo "Step 4: Preparing training data..."
-echo "This will download glaive-function-calling-v2 dataset"
+echo "This will download and format Team-ACE/ToolACE"
 python scripts/2_prepare_data.py || echo "Warning: Data preparation may have failed"
 echo ""
 

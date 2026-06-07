@@ -5,8 +5,11 @@ build/
 dist/
 wheels/
 models/
+eval/
 data/
 logs/
+wandb/
+package/
 *.egg-info
 
 # Virtual environments
