@@ -3,6 +3,8 @@
 
 import sys
 import os
+import transformers
+import importlib.util
 from pathlib import Path
 
 # Add project root to path
@@ -53,6 +55,21 @@ def drop_text_column(dataset):
     return dataset
 
 
+def pick_attention_implementation() -> str:
+    """Use FlashAttention when installed, otherwise keep the uv-locked env runnable."""
+    configured = os.environ.get("ATTN_IMPLEMENTATION")
+    if configured:
+        logger.info("Using attention implementation from ATTN_IMPLEMENTATION=%s", configured)
+        return configured
+
+    if importlib.util.find_spec("flash_attn") is not None:
+        logger.info("flash-attn is installed; using flash_attention_2.")
+        return "flash_attention_2"
+
+    logger.warning("flash-attn is not installed; falling back to sdpa.")
+    return "sdpa"
+
+
 def train_sft():
     """Run SFT training."""
     logger.info("Starting SFT training...")
@@ -97,7 +114,10 @@ def train_sft():
         # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1" # 使用多张卡
 
         # 【配置选项】Wandb 模型训练追踪平台设置
-        os.environ["WANDB_PROJECT"] = "llama3.2-function-calling"
+        os.environ.setdefault("WANDB_PROJECT", "llama3.2-function-calling")
+        # os.environ.setdefault("WANDB_RUN_ID", "sft_shuffle_tools_20pct_epoch1")
+        # os.environ["WANDB_RUN_ID"] = "3m23exrg"
+        # os.environ["WANDB_RESUME"] = "allow"
         # os.environ["WANDB_DISABLED"] = "true" # 禁用 Wandb 追踪
 
         # ==========================================
@@ -105,6 +125,7 @@ def train_sft():
         # ==========================================
         model_path = resolve_model_path(config)
         logger.info(f"Loading model: {model_path}")
+        attn_implementation = pick_attention_implementation()
         
         # 【配置选项】如果想启用 QLoRA 4-bit 量化减小显存，可取消注释下方配置
         # qlora_config = BitsAndBytesConfig(
@@ -126,8 +147,7 @@ def train_sft():
             trust_remote_code=True,
             
             # 【配置选项】注意力机制优化（加速并省显存）
-            attn_implementation="flash_attention_2", # 推荐（需要GPU支持及安装 flash-attn）
-            # attn_implementation="sdpa",             # PyTorch自带的缩放点积注意力
+            attn_implementation=attn_implementation,
             
             # 【配置选项】启用量化时取消下方注释
             # quantization_config=qlora_config,
@@ -169,8 +189,10 @@ def train_sft():
 
         # Prepare datasets
         logger.info("Loading processed datasets...")
-        train_dataset = drop_text_column(load_from_disk("./data/processed/train"))
-        eval_dataset = drop_text_column(load_from_disk("./data/processed/validation"))
+        train_data_path = config["data"].get("processed_train_path", "./data/processed/train")
+        validation_data_path = config["data"].get("processed_validation_path", "./data/processed/validation")
+        train_dataset = drop_text_column(load_from_disk(train_data_path))
+        eval_dataset = drop_text_column(load_from_disk(validation_data_path))
 
         logger.info(f"Train dataset size: {len(train_dataset)}")
         logger.info(f"Eval dataset size: {len(eval_dataset)}")
@@ -218,7 +240,7 @@ def train_sft():
             
             seed=config['seed'],                      # 随机种子，确保实验可复现
             dataloader_pin_memory=True,               # 锁页内存，加速CPU到GPU的数据传输
-            dataloader_num_workers=4,                 # 多线程数据加载
+            dataloader_num_workers=config['training'].get('dataloader_num_workers', 4), # 多线程数据加载
             remove_unused_columns=False,              # PEFT forward signature can hide attention_mask
             prediction_loss_only=True,                 # Avoid storing logits during eval
         )
@@ -236,7 +258,13 @@ def train_sft():
 
         # Train
         logger.info("Starting training loop...")
-        trainer.train()
+        checkpoint = transformers.trainer_utils.get_last_checkpoint(config['training']['output_dir'])
+        print(checkpoint)
+        if checkpoint and config['training']['resume_from_checkpoint']:
+            # os.environ["WANDB_RESUME"] = "must"
+            trainer.train(resume_from_checkpoint=checkpoint)
+        else:
+            trainer.train()
 
         # Save model
         if debug_run:
