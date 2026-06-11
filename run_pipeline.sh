@@ -30,36 +30,22 @@ echo "This may take 10-15 minutes and requires ~2.1GB disk space"
 python scripts/1_download_model.py || echo "Warning: Model download may have failed"
 echo ""
 
-# Prepare data
-echo "Step 4: Preparing training data..."
+# Prepare structured dataset
+echo "Step 4: Preparing structured ToolACE dataset..."
 echo "This will download and format Team-ACE/ToolACE"
+python scripts/2_prepare_dataset.py || echo "Warning: Structured dataset preparation may have failed"
+echo ""
+
+# Prepare data
+echo "Step 5: Preparing training data..."
+echo "This will tokenize the structured dataset and build assistant-only labels"
 python scripts/2_prepare_data.py || echo "Warning: Data preparation may have failed"
 echo ""
 
 # Train SFT
-echo "Step 5: Starting SFT training (1-2 hours)..."
+echo "Step 6: Starting SFT training (1-2 hours)..."
 echo "GPU will be heavily utilized. Monitor with: nvidia-smi -l 1"
 python scripts/3_sft_training.py || echo "Warning: SFT training may have failed"
-echo ""
-
-# Train GRPO
-echo "Step 6: Starting GRPO training (2-4 hours)..."
-python scripts/4_grpo_training.py || echo "Warning: GRPO training may have failed"
-echo ""
-
-# Evaluate
-echo "Step 7: Running evaluation..."
-python scripts/5_evaluate.py || echo "Warning: Evaluation may have failed"
-echo ""
-
-# BFCL Evaluation
-echo "Step 8: Running BFCL-V4 evaluation..."
-python scripts/7_bfcl_evaluation.py || echo "Warning: BFCL evaluation may have failed"
-echo ""
-
-# Inference
-echo "Step 9: Running inference examples..."
-python scripts/6_inference.py || echo "Warning: Inference may have failed"
 echo ""
 
 echo "======================================"
@@ -68,6 +54,5 @@ echo "======================================"
 echo ""
 echo "Next steps:"
 echo "1. Check logs in ./logs/ directory"
-echo "2. View BFCL results: cat logs/bfcl_results.json"
-echo "3. Monitor training: tensorboard --logdir=./logs/tensorboard"
+echo "2. Monitor training: tensorboard --logdir=./logs/tensorboard"
 echo ""

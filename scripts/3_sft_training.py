@@ -5,13 +5,14 @@ import sys
 import os
 import transformers
 import importlib.util
+import math
 from pathlib import Path
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from scripts.utils.utils import setup_logging, load_yaml_config, get_device_info
+from scripts.utils.utils import setup_logging, load_experiment_config, get_device_info
 
 logger = setup_logging("./logs/sft_training.log")
 
@@ -53,6 +54,50 @@ def drop_text_column(dataset):
     if "text" in dataset.column_names:
         return dataset.remove_columns(["text"])
     return dataset
+
+
+def calculate_warmup_steps(config: dict, train_size: int, debug_max_steps: int) -> int:
+    """Return explicit warmup_steps without using deprecated warmup_ratio.
+
+    新版 transformers 已经弃用 `warmup_ratio` 参数。这里优先读取
+    `training.warmup_steps`；如果旧配置还保留 `warmup_ratio`，则在脚本内
+    按当前训练集大小换算成 steps，但不再传 `warmup_ratio` 给 Trainer。
+    """
+    training_config = config["training"]
+    if "warmup_steps" in training_config:
+        return int(training_config["warmup_steps"])
+
+    warmup_ratio = float(training_config.get("warmup_ratio", 0))
+    if warmup_ratio <= 0:
+        return 0
+
+    if debug_max_steps > 0:
+        total_steps = debug_max_steps
+    else:
+        batch_size = int(training_config["per_device_train_batch_size"])
+        grad_accum = int(training_config["gradient_accumulation_steps"])
+        epochs = float(training_config["num_train_epochs"])
+        steps_per_epoch = math.ceil(train_size / max(1, batch_size * grad_accum))
+        total_steps = math.ceil(steps_per_epoch * epochs)
+
+    return int(total_steps * warmup_ratio)
+
+
+def align_model_token_ids(model, tokenizer) -> None:
+    """Align model/tokenizer special token ids before SFTTrainer sees them.
+
+    TRL/transformers 会在 Trainer 初始化时检查 tokenizer 和 model config。
+    如果 PAD/BOS/EOS 不一致，它会自动修正并打印提示。我们提前显式对齐，
+    让训练配置可见、可复现，也避免运行时提示刷屏。
+    """
+    token_fields = ("pad_token_id", "bos_token_id", "eos_token_id")
+    for field in token_fields:
+        token_id = getattr(tokenizer, field, None)
+        if token_id is None:
+            continue
+        setattr(model.config, field, token_id)
+        if getattr(model, "generation_config", None) is not None:
+            setattr(model.generation_config, field, token_id)
 
 
 def pick_attention_implementation() -> str:
@@ -104,7 +149,9 @@ def train_sft():
 
     try:
         # Load configuration
-        config = load_yaml_config("./configs/sft_config.yaml")
+        config = load_experiment_config("./configs/sft_config.yaml")
+        logger.info("Config path: ./configs/sft_config.yaml")
+        logger.info("Active experiment: %s", config.get("experiments", {}).get("active", "default"))
         bf16, fp16 = precision_flags(torch, config)
         debug_max_steps = int(os.environ.get("SFT_MAX_STEPS", "-1"))
         debug_run = debug_max_steps > 0
@@ -168,6 +215,7 @@ def train_sft():
 
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
+        align_model_token_ids(model, tokenizer)
         # ==========================================
         # 3. 配置 LoRA 参数
         # ==========================================
@@ -196,6 +244,8 @@ def train_sft():
 
         logger.info(f"Train dataset size: {len(train_dataset)}")
         logger.info(f"Eval dataset size: {len(eval_dataset)}")
+        warmup_steps = calculate_warmup_steps(config, len(train_dataset), debug_max_steps)
+        logger.info(f"Warmup steps: {warmup_steps}")
 
         # Training arguments
         training_args = TrainingArguments(
@@ -213,7 +263,7 @@ def train_sft():
 
             # [优化器和学习率]
             learning_rate=config['training']['learning_rate'], # 学习率 lora 一般在 5e-5 到 2e-4 之间
-            warmup_ratio=config['training']['warmup_ratio'], # 预热步数比例  
+            warmup_steps=warmup_steps, # 显式 step 数，避免 transformers v5.2 移除 warmup_ratio 后不兼容
             weight_decay=config['training']['weight_decay'], # 权重衰减系数
             max_grad_norm=config['training']['max_grad_norm'],
             lr_scheduler_type=config['training']['lr_scheduler_type'],  # 学习率衰减策略

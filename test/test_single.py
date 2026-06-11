@@ -1,9 +1,9 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
-model_path = "/home/yanyan/project/llama3.2-1B-tool/models/sft-555"
+model_path = "/home/yanyan/project/llama3.2-1B-tool/models/sft-360"
 
-tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, clean_up_tokenization_spaces=False)
 model = AutoModelForCausalLM.from_pretrained(
     model_path,
     dtype=torch.bfloat16,
@@ -80,11 +80,11 @@ Here is a list of functions in json format that you can invoke.
     "parameters": {
       "type": "dict",
       "required": [
-        "operation",
-        "task_entry"
+        "x",
+        "y"
       ],
       "properties": {
-        "operation": {
+        "x"on": {
           "type": "string",
           "description": "The action to be performed on the todo list.",
           "enum": [
@@ -93,7 +93,7 @@ Here is a list of functions in json format that you can invoke.
             "update"
           ]
         },
-        "task_entry": {
+        "y": {
           "type": "string",
           "description": "The details of the todo item relevant to the action being performed."
         }

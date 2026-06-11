@@ -8,7 +8,6 @@ modelscope==1.37.1
 accelerate==1.13.0
 wandb==0.27.0
 bitsandbytes==0.49.2
-bfcl==1.0.1
 pydantic==2.13.4
 pyyaml==6.0.3
 socksio==1.0.0
