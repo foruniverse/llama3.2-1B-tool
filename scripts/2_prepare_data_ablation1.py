@@ -37,7 +37,7 @@ sys.path.insert(0, str(project_root))
 
 from scripts.utils.utils import ensure_dir, load_experiment_config, save_json, setup_logging
 
-logger = setup_logging("./logs/prepare_data_abalation1.log")
+logger = setup_logging("./logs/prepare_data_ablation1.log")
 
 TRAIN_ABLATION_RATIO = 0.20
 TEST_ABLATION_RATIO = 0.50

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""临时脚本：让 DeepSeek 教师模型重新标注 refusal 样本。
+"""辅助脚本：让 DeepSeek 教师模型重新标注 refusal 样本。
 
-本脚本不接入主流程。它用于验证一个新想法：
+本脚本不接入主训练流程。它用于生成 ablation2 所需的 teacher refusal 数据：
 
 1. 从 `data/tool_ace_processed` 读取 `refusal=1` 且有 tool 的样本。
 2. 按固定比例决定是否扰动参数名、函数名。
@@ -18,11 +18,11 @@
 
 ```bash
 # 先只生成待请求样本和 prompt 预览，不调用教师模型
-uv run python scripts/tmp_generate_refusal_teacher_actions.py --limit 20 --dry-run
+uv run python scripts/5_generate_refusal_teacher_actions.py --limit 20 --dry-run
 
 # 配置 DeepSeek API 后调用教师模型
 DEEPSEEK_API_KEY=xxx \
-uv run python scripts/tmp_generate_refusal_teacher_actions.py --limit 50
+uv run python scripts/5_generate_refusal_teacher_actions.py --limit 50
 ```
 """
 
@@ -63,7 +63,7 @@ _THREAD_LOCAL = threading.local()
 
 def load_ablation_helpers():
     """复用 ablation1 已修正过的参数扰动逻辑，避免两处实现漂移。"""
-    path = Path("scripts/2_prepare_data_abalation1.py")
+    path = Path("scripts/2_prepare_data_ablation1.py")
     spec = importlib.util.spec_from_file_location("ablation1_helpers", path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load helper script: {path}")

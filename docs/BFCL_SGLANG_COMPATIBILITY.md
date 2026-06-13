@@ -24,7 +24,7 @@ The area of a triangle can be calculated using the formula...
 
 2. 对比输入 prompt
 
-   BFCL 的 Llama handler 手写 chat template，没有直接使用 `models/sft-555/chat_template.jinja`。本地 `test/test_single.py` 使用 tokenizer 的 `apply_chat_template`，会额外插入日期和知识截止信息。
+   BFCL 的 Llama handler 手写 chat template，没有直接使用 `models/sft-555/chat_template.jinja`。本地手动 Transformers smoke test 使用 tokenizer 的 `apply_chat_template`，会额外插入日期和知识截止信息。
 
    但进一步验证发现，Transformers 直接加载 `models/sft-555` 时，无论喂 BFCL prompt 还是 tokenizer prompt，都能输出正确函数调用。因此 prompt 差异不是这次低分的主因。
 

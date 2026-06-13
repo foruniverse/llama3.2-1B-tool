@@ -2,7 +2,7 @@
 
 ## 目标
 
-`scripts/2_prepare_data_abalation2.py` 用于构造第二个 SFT 消融实验数据集：
+`scripts/2_prepare_data_ablation2.py` 用于构造第二个 SFT 消融实验数据集：
 
 - 非 refusal JSON tool-call 样本测试模型对参数名和函数名扰动的鲁棒性。
 - Refusal 样本使用 DeepSeek teacher 生成的自然语言 description。
@@ -31,11 +31,11 @@
 
 - 输入结构化数据：`data/tool_ace_processed`
 - 输入 teacher refusal：`data/ablation_refusal_teacher_deepseek/dataset`
-- 训练输出：`data/train/train_abalation2_param_func_refusal_teacher`
-- 验证输出：`data/eval/eval_abalation2_param_func_refusal_teacher`
+- 训练输出：`data/train/train_ablation2_param_func_refusal_teacher`
+- 验证输出：`data/eval/eval_ablation2_param_func_refusal_teacher`
 - 报告：`data/ablation2/metadata.json`
 - 预览：`data/ablation2/ablation2_preview.txt`
-- 日志：`logs/prepare_data_abalation2.log`
+- 日志：`logs/prepare_data_ablation2.log`
 
 ## 对既有数据预处理的影响
 

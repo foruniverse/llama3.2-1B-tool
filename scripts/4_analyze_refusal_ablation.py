@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""临时分析脚本：统计 refusal 类型，并评估是否适合做参数扰动。
+"""辅助分析脚本：统计 refusal 类型，并评估是否适合做参数扰动。
 
 注意：
-- 这是一次性分析工具，不接入主流程。
+- 这是实验分析工具，不接入主训练流程。
 - 只读取 `data/tool_ace_processed`，不修改训练数据。
 - 跳过 tool_count=0 的样本，因为没有工具时不存在参数扰动问题。
 """
@@ -30,7 +30,7 @@ REPORT_JSON = OUTPUT_DIR / "refusal_ablation_analysis.json"
 
 def load_ablation_helpers():
     """复用 ablation1 中已经修正过的参数收集/替换逻辑。"""
-    path = Path("scripts/2_prepare_data_abalation1.py")
+    path = Path("scripts/2_prepare_data_ablation1.py")
     spec = importlib.util.spec_from_file_location("ablation1_helpers", path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load helper script: {path}")

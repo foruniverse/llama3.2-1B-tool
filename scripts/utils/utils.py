@@ -13,24 +13,31 @@ def setup_logging(log_path: Optional[str] = None) -> logging.Logger:
     """Setup logging configuration."""
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
+    logger.propagate = False
 
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
 
-    # Console handler
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    if not any(isinstance(handler, logging.StreamHandler) for handler in logger.handlers):
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
 
-    # File handler
     if log_path:
         os.makedirs(os.path.dirname(log_path), exist_ok=True)
-        fh = logging.FileHandler(log_path)
-        fh.setLevel(logging.INFO)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
+        absolute_log_path = str(Path(log_path).resolve())
+        has_file_handler = any(
+            isinstance(handler, logging.FileHandler)
+            and Path(handler.baseFilename).resolve() == Path(absolute_log_path)
+            for handler in logger.handlers
+        )
+        if not has_file_handler:
+            fh = logging.FileHandler(log_path)
+            fh.setLevel(logging.INFO)
+            fh.setFormatter(formatter)
+            logger.addHandler(fh)
 
     return logger
 

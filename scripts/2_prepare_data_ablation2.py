@@ -39,7 +39,7 @@ sys.path.insert(0, str(project_root))
 
 from scripts.utils.utils import ensure_dir, load_experiment_config, save_json, setup_logging
 
-logger = setup_logging("./logs/prepare_data_abalation2.log")
+logger = setup_logging("./logs/prepare_data_ablation2.log")
 
 PARAMETER_ONLY_RATIO = 0.15
 FUNCTION_ONLY_RATIO = 0.10
@@ -50,7 +50,7 @@ ABLATION_MODES = ("parameter_name", "function_name", "parameter_and_function")
 
 def load_ablation1_helpers() -> Any:
     """复用 ablation1 里稳定的 prompt、label 和参数 schema 改写逻辑。"""
-    path = project_root / "scripts" / "2_prepare_data_abalation1.py"
+    path = project_root / "scripts" / "2_prepare_data_ablation1.py"
     spec = importlib.util.spec_from_file_location("ablation1_helpers", path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load helper script: {path}")

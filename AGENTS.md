@@ -8,8 +8,8 @@
 uv sync --locked
 uv run python scripts/1_download_model.py
 uv run python scripts/2_prepare_dataset.py
-uv run python scripts/2_prepare_data_abalation1.py
-uv run python scripts/2_prepare_data_abalation2.py
+uv run python scripts/2_prepare_data_ablation1.py
+uv run python scripts/2_prepare_data_ablation2.py
 uv run python scripts/3_sft_training.py
 uv run python scripts/8_lora_merge.py --lora-path <checkpoint> --output-dir <merged-model>
 uv run python scripts/9_make_sglang_compatible.py <merged-model>
@@ -22,7 +22,7 @@ uv run python scripts/10_shuffle_tool_schema.py
 uv run python scripts/11_filter_retokenize_processed.py
 ```
 
-不要直接跑完整 `run_pipeline.sh`，除非确认 GPU、数据、模型下载和训练时间都可用。
+仓库不再保留一键 `run_pipeline.sh`。不要临时重建并直接串行跑完整流程，除非确认 GPU、数据、模型下载和训练时间都可用。
 
 ## 日志要求
 
@@ -60,8 +60,8 @@ uv run python scripts/11_filter_retokenize_processed.py
 数据预处理改动必须说明是否影响：
 
 - `scripts/2_prepare_dataset.py`
-- `scripts/2_prepare_data_abalation1.py`
-- `scripts/2_prepare_data_abalation2.py`
+- `scripts/2_prepare_data_ablation1.py`
+- `scripts/2_prepare_data_ablation2.py`
 - `data/tool_ace_processed`
 - `data/tool_ace_processed/sample_prompts.txt`
 - `data/tool_ace_processed/dataset_report.md`
@@ -69,8 +69,8 @@ uv run python scripts/11_filter_retokenize_processed.py
 - `data/ablation1/metadata.json`
 - `data/ablation2/metadata.json`
 - `data/ablation_refusal_teacher_deepseek/dataset`
-- `data/train/train_abalation2_param_func_refusal_teacher`
-- `data/eval/eval_abalation2_param_func_refusal_teacher`
+- `data/train/train_ablation2_param_func_refusal_teacher`
+- `data/eval/eval_ablation2_param_func_refusal_teacher`
 - `data/processed/metadata.json`
 
 ## 验证

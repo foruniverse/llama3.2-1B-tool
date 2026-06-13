@@ -7,10 +7,10 @@ model:
 
 training:
   output_dir: "./models/checkpoints/sft_ablation2_param_func_refusal_teacher"
-  num_train_epochs: 3 
+  num_train_epochs: 3
   per_device_train_batch_size: 2
   per_device_eval_batch_size: 2
-  gradient_accumulation_steps: 24  # Effective batch size = 1*32=32
+  gradient_accumulation_steps: 24  # Effective batch size = 2*24=48
   learning_rate: 1.0e-4
   lr_scheduler_type: "cosine"
   warmup_steps: 17  # 约等于当前 8194 train samples / batch 2 / grad_accum 24 / 1 epoch 的 10%
@@ -48,8 +48,8 @@ data:
   dataset_name: "Team-ACE/ToolACE"
   structured_dataset_path: "./data/tool_ace_processed"
   refusal_teacher_dataset_path: "./data/ablation_refusal_teacher_deepseek/dataset"
-  processed_train_path: "./data/train/train_abalation2_param_func_refusal_teacher"
-  processed_validation_path: "./data/eval/eval_abalation2_param_func_refusal_teacher"
+  processed_train_path: "./data/train/train_ablation2_param_func_refusal_teacher"
+  processed_validation_path: "./data/eval/eval_ablation2_param_func_refusal_teacher"
   ablation2_report_dir: "./data/ablation2"
   validation_split_percentage: 5
   train_samples: 0
@@ -60,7 +60,7 @@ seed: 42
 torch_compile: false
 
 experiments:
-  active: "ablation2"
+  active: "ablation3"
   profiles:
     baseline:
       training:
@@ -72,14 +72,27 @@ experiments:
       training:
         output_dir: "./models/checkpoints/sft_ablation1_parameter_shuffle_rename"
       data:
-        processed_train_path: "./data/train/train_abalation1_parameter"
-        processed_validation_path: "./data/eval/eval_abalation1_parameter"
+        processed_train_path: "./data/train/train_ablation1_parameter"
+        processed_validation_path: "./data/eval/eval_ablation1_parameter"
     ablation2:
       training:
         output_dir: "./models/checkpoints/sft_ablation2_param_func_refusal_teacher"
       data:
         structured_dataset_path: "./data/tool_ace_processed"
         refusal_teacher_dataset_path: "./data/ablation_refusal_teacher_deepseek/dataset"
-        processed_train_path: "./data/train/train_abalation2_param_func_refusal_teacher"
-        processed_validation_path: "./data/eval/eval_abalation2_param_func_refusal_teacher"
+        processed_train_path: "./data/train/train_ablation2_param_func_refusal_teacher"
+        processed_validation_path: "./data/eval/eval_ablation2_param_func_refusal_teacher"
         ablation2_report_dir: "./data/ablation2"
+
+    ablation3:
+      training:
+        output_dir: "./models/checkpoints/sft_ablation3_param_func_refusal_teacher_r32"
+      lora:
+        lora_r: 32
+        lora_alpha: 64
+      data:
+        structured_dataset_path: "./data/tool_ace_processed"
+        refusal_teacher_dataset_path: "./data/ablation_refusal_teacher_deepseek/dataset"
+        processed_train_path: "./data/train/train_ablation2_param_func_refusal_teacher"
+        processed_validation_path: "./data/eval/eval_ablation2_param_func_refusal_teacher"
+        ablation2_report_dir: "./data/ablation3"
